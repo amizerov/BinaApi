@@ -15,8 +15,8 @@ namespace ConsoleApp1
         static BinanceClient _restClient = new();
         static BinanceSocketClient socketClient = new();
 
-        public static event Action<string, Kline>? OnKlineUpdate;
-        static void KlineUpdated(string s, Kline k) => OnKlineUpdate?.Invoke(s, k);
+        public static event Action<Kline>? OnKlineUpdate;
+        static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
 
         public static void Init(string apiKey, string apiSecret)
         {
@@ -30,7 +30,7 @@ namespace ConsoleApp1
             }
             catch (Exception ex)
             {
-                Console.Write("CheckApiKey", $"Error: {ex.Message}");
+                Console.WriteLine($"Init api key - Error: {ex.Message}");
             }
         }
         public static async Task<List<Kline>> GetKlinesAsync(string symbol, string inter)
@@ -45,25 +45,32 @@ namespace ConsoleApp1
             if (r.Success)
             {
                 klines = r.Data.ToList();
-                Console.Write($"GetKlines({symbol})", $"{klines.Count} klines loaded");
+                Console.WriteLine($"GetKlines({symbol}) - {klines.Count} klines loaded");
             }
             else
             {
-                Console.Write($"GetKlines({symbol})", "" + r.Error?.Message);
+                Console.WriteLine($"GetKlines({symbol}) - Error: " + r.Error?.Message);
             }
             return klines;
         }
-        public static async Task<CallResult<UpdateSubscription>> SubsToSock(string symbol, string inter)
+        public static async Task<CallResult<UpdateSubscription>> SubsToSock(string inter)
         {
             var r = await socketClient.SpotStreams.
-                SubscribeToKlineUpdatesAsync(symbol, (KlineInterval)IntervalInSeconds(inter),
+                SubscribeToKlineUpdatesAsync(_symbol, (KlineInterval)IntervalInSeconds(inter),
                 msg =>
                 {
                     IBinanceStreamKline k = msg.Data.Data;
-                    Kline kline = (Kline)k;
 
-                    KlineUpdated(symbol, kline);
-                    Console.Write("qqq", $"{symbol} {k.OpenTime} {k.ClosePrice}");
+                    Kline kline = new Kline();
+                    kline.HighPrice = k.HighPrice;
+                    kline.LowPrice = k.LowPrice;
+                    kline.OpenPrice = k.OpenPrice;
+                    kline.ClosePrice = k.ClosePrice;
+                    kline.Volume = k.Volume;
+                    kline.OpenTime = k.OpenTime;
+
+                    KlineUpdated(kline);
+                    Console.WriteLine($"{DateTime.Now.ToString("t")} - Last trade: {_symbol} {k.OpenTime} {k.ClosePrice}");
                 });
 
             return r;
