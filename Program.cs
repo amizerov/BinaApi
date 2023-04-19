@@ -1,8 +1,11 @@
 ﻿using CryptoExchange.Net.CommonObjects;
 
+// Подключаем коннектор с Бинанс и получаем 1000 последних свечей
 List<Kline> klines = await BinaApi.Init("Key", "Secret", "BTCUSDT");
+// Подписались на событие обновления цены
 BinaApi.OnKlineUpdate += OnKlineUpdate;
 
+// Цикл жизни бота
 while (true)
     await Task.Delay(100);
 
@@ -20,6 +23,8 @@ void OnKlineUpdate(Kline k)
     }
     JustDoIt();
 }
+
+// Основная функция бота
 void JustDoIt()
 {
     if (TradingBot.HasSignalToOpenLong(klines))
