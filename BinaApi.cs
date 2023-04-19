@@ -11,6 +11,7 @@ namespace ConsoleApp1
 {
     public static class BinaApi
     {
+        static string _interval = "5m";
         static string _symbol = "BTCUSDT";
         static BinanceClient _restClient = new();
         static BinanceSocketClient socketClient = new();
@@ -28,7 +29,7 @@ namespace ConsoleApp1
                         ApiCredentials = new BinanceApiCredentials(apiKey, apiSecret)
                     });
 
-                await SubsToSock("5m");
+                await SubsToSock();
 
             }
             catch (Exception ex)
@@ -36,13 +37,13 @@ namespace ConsoleApp1
                 Console.WriteLine($"Init api key - Error: {ex.Message}");
             }
         }
-        public static async Task<List<Kline>> GetKlinesAsync(string symbol, string inter)
+        public static async Task<List<Kline>> GetKlinesAsync(string symbol)
         {
             _symbol = symbol;
             List<Kline> klines = new();
             CancellationToken cancellationToken = new CancellationToken();
             var r = await _restClient.SpotApi.CommonSpotClient
-                .GetKlinesAsync(symbol, TimeSpan.FromSeconds(IntervalInSeconds(inter)),
+                .GetKlinesAsync(symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
                 null, null, 1000, cancellationToken);
 
             if (r.Success)
@@ -56,10 +57,10 @@ namespace ConsoleApp1
             }
             return klines;
         }
-        public static async Task<CallResult<UpdateSubscription>> SubsToSock(string inter)
+        static async Task<CallResult<UpdateSubscription>> SubsToSock()
         {
             var r = await socketClient.SpotStreams.
-                SubscribeToKlineUpdatesAsync(_symbol, (KlineInterval)IntervalInSeconds(inter),
+                SubscribeToKlineUpdatesAsync(_symbol, (KlineInterval)IntervalInSeconds(_interval),
                 msg =>
                 {
                     IBinanceStreamKline k = msg.Data.Data;
