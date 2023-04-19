@@ -1,9 +1,11 @@
 ﻿using Binance.Net.Clients;
+using Binance.Net.Enums;
+using Binance.Net.Interfaces;
 using Binance.Net.Objects;
-using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.CommonObjects;
-using CryptoExchange.Net.Interfaces;
 using CryptoExchange.Net.Logging;
+using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.Sockets;
 
 namespace ConsoleApp1
 {
@@ -12,6 +14,9 @@ namespace ConsoleApp1
         static string _symbol = "BTCUSDT";
         static BinanceClient _restClient = new();
         static BinanceSocketClient socketClient = new();
+
+        public static event Action<string, Kline>? OnKlineUpdate;
+        static void KlineUpdated(string s, Kline k) => OnKlineUpdate?.Invoke(s, k);
 
         public static void Init(string apiKey, string apiSecret)
         {
@@ -28,7 +33,7 @@ namespace ConsoleApp1
                 Console.Write("CheckApiKey", $"Error: {ex.Message}");
             }
         }
-        public static async Task<List<Kline>> GetKlines(string symbol, string inter)
+        public static async Task<List<Kline>> GetKlinesAsync(string symbol, string inter)
         {
             _symbol = symbol;
             List<Kline> klines = new();
@@ -48,6 +53,22 @@ namespace ConsoleApp1
             }
             return klines;
         }
+        public static async Task<CallResult<UpdateSubscription>> SubsToSock(string symbol, string inter)
+        {
+            var r = await socketClient.SpotStreams.
+                SubscribeToKlineUpdatesAsync(symbol, (KlineInterval)IntervalInSeconds(inter),
+                msg =>
+                {
+                    IBinanceStreamKline k = msg.Data.Data;
+                    Kline kline = (Kline)k;
+
+                    KlineUpdated(symbol, kline);
+                    Console.Write("qqq", $"{symbol} {k.OpenTime} {k.ClosePrice}");
+                });
+
+            return r;
+        }
+
         public static void SpotOrderBuy(decimal quantity)
         {
             _restClient.SpotApi.Trading.PlaceOrderAsync(
