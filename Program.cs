@@ -1,8 +1,7 @@
 ﻿using ConsoleApp1;
 using CryptoExchange.Net.CommonObjects;
 
-BinaApi.Init("Key", "Secret");
-List<Kline> klines = await BinaApi.GetKlinesAsync("BTCUSDT");
+List<Kline> klines = await BinaApi.Init("Key", "Secret", "BTCUSDT");
 BinaApi.OnKlineUpdate += OnKlineUpdate;
 
 while (true)

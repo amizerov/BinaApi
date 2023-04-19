@@ -19,10 +19,11 @@ namespace ConsoleApp1
         public static event Action<Kline>? OnKlineUpdate;
         static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
 
-        public static async void Init(string apiKey, string apiSecret)
+        public static async Task<List<Kline>> Init(string symbol, string apiKey, string apiSecret)
         {
             try
             {
+                _symbol = symbol;
                 _restClient = new BinanceClient(
                     new BinanceClientOptions()
                     {
@@ -30,30 +31,30 @@ namespace ConsoleApp1
                     });
 
                 await SubsToSock();
-
+                return await GetKlinesAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Init api key - Error: {ex.Message}");
             }
+            return new List<Kline>();
         }
-        public static async Task<List<Kline>> GetKlinesAsync(string symbol)
+        static async Task<List<Kline>> GetKlinesAsync()
         {
-            _symbol = symbol;
             List<Kline> klines = new();
             CancellationToken cancellationToken = new CancellationToken();
             var r = await _restClient.SpotApi.CommonSpotClient
-                .GetKlinesAsync(symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
+                .GetKlinesAsync(_symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
                 null, null, 1000, cancellationToken);
 
             if (r.Success)
             {
                 klines = r.Data.ToList();
-                Console.WriteLine($"GetKlines({symbol}) - {klines.Count} klines loaded");
+                Console.WriteLine($"GetKlines({_symbol}) - {klines.Count} klines loaded");
             }
             else
             {
-                Console.WriteLine($"GetKlines({symbol}) - Error: " + r.Error?.Message);
+                Console.WriteLine($"GetKlines({_symbol}) - Error: " + r.Error?.Message);
             }
             return klines;
         }
