@@ -15,10 +15,12 @@ void OnKlineUpdate(Kline k)
 
     if (TradingBot.HasSignalToOpenLong(klines))
     {
+        // Открываем длинную позицию
         BinaApi.SpotOrderBuy(10);
     }
     if (TradingBot.HasSignalToCloseLong(klines))
     {
+        // Закрываем длинную позицию
         BinaApi.SpotOrderSell(10);
     }
     if (TradingBot.HasSignalToOpenShort(klines))
