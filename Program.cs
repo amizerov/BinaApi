@@ -8,8 +8,20 @@ while (true)
 
 void OnKlineUpdate(Kline k)
 {
-    UpdateKlines(k);
-
+    Kline lk = klines.Last();
+    if (lk.OpenTime == k.OpenTime)
+    {
+        klines.Remove(lk);
+        klines.Add(k);
+    }
+    else
+    {
+        klines.Add(k);
+    }
+    JustDoIt();
+}
+void JustDoIt()
+{
     if (TradingBot.HasSignalToOpenLong(klines))
     {
         // Открываем длинную позицию
@@ -27,18 +39,5 @@ void OnKlineUpdate(Kline k)
     if (TradingBot.HasSignalToCloseShort(klines))
     {
         BinaApi.SpotOrderBuy(10);
-    }
-}
-void UpdateKlines(Kline k)
-{
-    Kline lk = klines.Last();
-    if (lk.OpenTime == k.OpenTime)
-    {
-        klines.Remove(lk);
-        klines.Add(k);
-    }
-    else
-    {
-        klines.Add(k);
     }
 }
