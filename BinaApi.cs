@@ -18,7 +18,7 @@ namespace ConsoleApp1
         public static event Action<Kline>? OnKlineUpdate;
         static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
 
-        public static void Init(string apiKey, string apiSecret)
+        public static async void Init(string apiKey, string apiSecret)
         {
             try
             {
@@ -27,6 +27,9 @@ namespace ConsoleApp1
                     {
                         ApiCredentials = new BinanceApiCredentials(apiKey, apiSecret)
                     });
+
+                await SubsToSock("5m");
+
             }
             catch (Exception ex)
             {

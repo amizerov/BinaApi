@@ -4,7 +4,6 @@ using CryptoExchange.Net.CommonObjects;
 BinaApi.Init("Key", "Secret");
 List<Kline> klines = await BinaApi.GetKlinesAsync("BTCUSDT", "5m");
 BinaApi.OnKlineUpdate += OnKlineUpdate;
-await BinaApi.SubsToSock("5m");
 
 while (true)
     await Task.Delay(100);
