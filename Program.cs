@@ -1,8 +1,8 @@
 ﻿using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
-string ApiKey = "iqDpyMfMcveQ9WNP2dNihsKYKgZMH7vaC6jA5UDyANkxRICga762oHuwD5rEXKcL";
-string ApiSec = "OY82zdjBY9RCiQFjbgqXZpASqAUt23eSyeIwIQp4qqqU995L5UK8tz7wFIBNeO4D";
+string ApiKey = "";
+string ApiSec = "";
 
 List<Kline> klines = new();
 
