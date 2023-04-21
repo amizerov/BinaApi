@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-namespace ConsoleApp1;
 
 public static class Secrets
 {

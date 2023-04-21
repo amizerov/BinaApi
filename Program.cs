@@ -1,5 +1,4 @@
-﻿using ConsoleApp1;
-using CryptoExchange.Net.CommonObjects;
+﻿using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
 string ApiKey = Secrets.ApiKey;
