@@ -6,8 +6,8 @@ List<Kline> klines = await BinaApi.Init("Key", "Secret", "BTCUSDT");
 BinaApi.OnKlineUpdate += OnKlineUpdate;
 
 // Цикл жизни бота
-//while (true)
-//    await Task.Delay(100);
+while (true)
+    await Task.Delay(100);
 
 void OnKlineUpdate(Kline k)
 {
