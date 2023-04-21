@@ -1,15 +1,17 @@
-﻿using CryptoExchange.Net.CommonObjects;
+﻿using ConsoleApp1;
+using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
-string ApiKey = "";
-string ApiSec = "";
+string ApiKey = Secrets.ApiKey;
+string ApiSec = Secrets.ApiSecret;
 
 List<Kline> klines = new();
 
-// Подключаем коннектор с Бинанс и получаем 1000 последних свечей
+// Подключаем коннектор с Бинанс и проверяем ключи
 bool res = await BinaApi.Init(ApiKey, ApiSec);
 if (res)
 {
+    // Получаем 1000 последних свечей
     klines = await BinaApi.GetKlinesAsync(Symbol);
 }
 else
