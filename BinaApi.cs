@@ -17,7 +17,7 @@ public static class BinaApi
     public static event Action<Kline>? OnKlineUpdate;
     static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
 
-    public static async Task<List<Kline>> Init(string symbol, string apiKey, string apiSecret)
+    public static async Task<List<Kline>> Init(string apiKey, string apiSecret, string symbol)
     {
         try
         {
