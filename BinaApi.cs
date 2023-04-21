@@ -45,7 +45,7 @@ public static class BinaApi
     public static async Task<List<BinanceBalance>> GetBalances() 
     { 
         List<BinanceBalance> balances = new();
-        var res = await _restClient!.SpotApi.Account.GetAccountInfoAsync();
+        var res = await _restClient.SpotApi.Account.GetAccountInfoAsync();
         if (res.Success)
         {
             balances = res.Data.Balances.ToList();
