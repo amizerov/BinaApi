@@ -1,7 +1,23 @@
 ﻿using CryptoExchange.Net.CommonObjects;
 
+string Symbol = "BTCUSDT";
+string ApiKey = "iqDpyMfMcveQ9WNP2dNihsKYKgZMH7vaC6jA5UDyANkxRICga762oHuwD5rEXKcL";
+string ApiSec = "OY82zdjBY9RCiQFjbgqXZpASqAUt23eSyeIwIQp4qqqU995L5UK8tz7wFIBNeO4D";
+
+List<Kline> klines = new();
+
 // Подключаем коннектор с Бинанс и получаем 1000 последних свечей
-List<Kline> klines = await BinaApi.Init("Key", "Secret", "BTCUSDT");
+bool res = await BinaApi.Init(ApiKey, ApiSec);
+if (res)
+{
+    klines = await BinaApi.GetKlinesAsync(Symbol);
+}
+else
+{
+    Console.WriteLine("Ключи не прошли проверку");
+    return;
+}
+
 // Подписались на событие обновления цены
 BinaApi.OnKlineUpdate += OnKlineUpdate;
 

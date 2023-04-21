@@ -2,6 +2,7 @@
 using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects;
+using Binance.Net.Objects.Models.Spot;
 using CryptoExchange.Net.CommonObjects;
 using CryptoExchange.Net.Logging;
 using CryptoExchange.Net.Objects;
@@ -9,38 +10,60 @@ using CryptoExchange.Net.Sockets;
 
 public static class BinaApi
 {
+    static string? _symbol;
     static string _interval = "5m";
-    static string _symbol = "BTCUSDT";
+
     static BinanceClient _restClient = new();
     static BinanceSocketClient socketClient = new();
 
     public static event Action<Kline>? OnKlineUpdate;
     static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
 
-    public static async Task<List<Kline>> Init(string apiKey, string apiSecret, string symbol)
+    public static async Task<bool> Init(string apiKey, string apiSecret)
     {
+        bool res = false;
         try
         {
-            _symbol = symbol;
             _restClient = new BinanceClient(
                 new BinanceClientOptions()
                 {
                     ApiCredentials = new BinanceApiCredentials(apiKey, apiSecret)
                 });
 
-            await SubsToSock();
-            return await GetKlinesAsync();
+            // Если получен доступ к балансам, ключ считается рабочим
+            List<BinanceBalance> bs = await GetBalances();
+            res = bs.Count > 0;
+
+            Console.WriteLine($"CheckApiKey - Key.IsWorking: {res}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Init api key - Error: {ex.Message}");
         }
-        return new List<Kline>();
+        return res;
     }
-    static async Task<List<Kline>> GetKlinesAsync()
+    public static async Task<List<BinanceBalance>> GetBalances() 
+    { 
+        List<BinanceBalance> balances = new();
+        var res = await _restClient!.SpotApi.Account.GetAccountInfoAsync();
+        if (res.Success)
+        {
+            balances = res.Data.Balances.ToList();
+        }
+        else
+        {
+            Console.WriteLine("GetBalances - " +
+                $"Error GetAccountInfoAsync: {res.Error?.Message}");
+        }
+        return balances;
+    }
+    public static async Task<List<Kline>> GetKlinesAsync(string symbol)
     {
+        _symbol = symbol;
+
         List<Kline> klines = new();
         CancellationToken cancellationToken = new CancellationToken();
+
         var r = await _restClient.SpotApi.CommonSpotClient
             .GetKlinesAsync(_symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
             null, null, 1000, cancellationToken);
@@ -48,6 +71,8 @@ public static class BinaApi
         if (r.Success)
         {
             klines = r.Data.ToList();
+            await SubsToSock();
+
             Console.WriteLine($"GetKlines({_symbol}) - {klines.Count} klines loaded");
         }
         else
@@ -59,7 +84,7 @@ public static class BinaApi
     static async Task<CallResult<UpdateSubscription>> SubsToSock()
     {
         var r = await socketClient.SpotStreams.
-            SubscribeToKlineUpdatesAsync(_symbol, (KlineInterval)IntervalInSeconds(_interval),
+            SubscribeToKlineUpdatesAsync(_symbol!, (KlineInterval)IntervalInSeconds(_interval),
             msg =>
             {
                 IBinanceStreamKline k = msg.Data.Data;
@@ -82,29 +107,29 @@ public static class BinaApi
     public static void SpotOrderBuy(decimal quantity)
     {
         _restClient.SpotApi.Trading.PlaceOrderAsync(
-            _symbol, 
-            Binance.Net.Enums.OrderSide.Buy, 
-            Binance.Net.Enums.SpotOrderType.Market, quantity);
+            _symbol!, 
+            OrderSide.Buy, 
+            SpotOrderType.Market, quantity);
     }
     public static void SpotOrderSell(decimal quantity)
     {
         _restClient.SpotApi.Trading.PlaceOrderAsync(
-            _symbol,
-            Binance.Net.Enums.OrderSide.Sell,
-            Binance.Net.Enums.SpotOrderType.Market, quantity);
+            _symbol!,
+            OrderSide.Sell,
+            SpotOrderType.Market, quantity);
     }
     public static void FutuOrderBuy(decimal quantity)
     {
         _restClient.CoinFuturesApi.Trading.PlaceOrderAsync(
-            _symbol,
-            Binance.Net.Enums.OrderSide.Buy, 
-            Binance.Net.Enums.FuturesOrderType.Market,
+            _symbol!,
+            OrderSide.Buy, 
+            FuturesOrderType.Market,
             quantity);
     }
     public static void FutuOrderSell(decimal quantity)
     {
         _restClient.CoinFuturesApi.Trading.PlaceOrderAsync(
-            _symbol,
+            _symbol!,
             OrderSide.Sell,
             FuturesOrderType.Market,
             quantity);
