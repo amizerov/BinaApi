@@ -105,8 +105,8 @@ public static class BinaApi
     {
         _restClient.CoinFuturesApi.Trading.PlaceOrderAsync(
             _symbol,
-            Binance.Net.Enums.OrderSide.Sell,
-            Binance.Net.Enums.FuturesOrderType.Market,
+            OrderSide.Sell,
+            FuturesOrderType.Market,
             quantity);
     }
     static int IntervalInSeconds(string inter)
