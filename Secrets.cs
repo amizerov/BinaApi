@@ -27,12 +27,12 @@ public static class Secrets
     static List<string> ReadKeysFromFile()
     {
         /*** формат файла BinanceApiKey.txt ******>
-         * {
-         *  "apiKey":"xxxxxxxxxxxxxxxxxxxxxx",
-         *  "secretKey":"xxxxxxxxxxxxxxxxxxxxxxx",
-         *  "comment":"SinexTradingBot_BinaApiKey21042023"
-         *  }
-         */
+         {
+           "apiKey":"xxxxxxxxxxxxxxxxxxxxxx",
+           "secretKey":"xxxxxxxxxxxxxxxxxxxxxxx",
+           "comment":"SinexTradingBot_BinaApiKey21042023"
+         }
+         *********************************************/
         List<string> keys = new();
         string path = "D:\\Projects\\Common\\Secrets\\BinanceApiKey.txt";
         if (File.Exists(path))

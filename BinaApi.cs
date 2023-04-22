@@ -11,7 +11,7 @@ using CryptoExchange.Net.Sockets;
 public static class BinaApi
 {
     static string? _symbol;
-    static string _interval = "5m";
+    static string? _interval;
 
     static BinanceClient _restClient = new();
     static BinanceSocketClient socketClient = new();
@@ -57,9 +57,10 @@ public static class BinaApi
         }
         return balances;
     }
-    public static async Task<List<Kline>> GetKlinesAsync(string symbol)
+    public static async Task<List<Kline>> GetKlinesAsync(string symbol, string interval = "5m")
     {
         _symbol = symbol;
+        _interval = interval;
 
         List<Kline> klines = new();
         CancellationToken cancellationToken = new CancellationToken();
@@ -84,7 +85,7 @@ public static class BinaApi
     static async Task<CallResult<UpdateSubscription>> SubsToSock()
     {
         var r = await socketClient.SpotStreams.
-            SubscribeToKlineUpdatesAsync(_symbol!, (KlineInterval)IntervalInSeconds(_interval),
+            SubscribeToKlineUpdatesAsync(_symbol!, (KlineInterval)IntervalInSeconds(_interval!),
             msg =>
             {
                 IBinanceStreamKline k = msg.Data.Data;
