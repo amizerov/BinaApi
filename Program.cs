@@ -1,4 +1,5 @@
-﻿using CryptoExchange.Net.CommonObjects;
+﻿using ConsoleApp1.Tools;
+using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
 string ApiKey = Secrets.ApiKey;
@@ -11,7 +12,7 @@ bool res = await BinaApi.Init(ApiKey, ApiSec);
 if (res)
 {
     // Получаем 1000 последних свечей
-    klines = await BinaApi.GetKlinesAsync(Symbol);
+    klines = await BinaApi.GetKlinesAsync(Symbol, "5m");
 }
 else
 {
@@ -19,7 +20,13 @@ else
     return;
 }
 
+// Проверить стратегию
+StochRsi tradingBot = new(Converter.KlinesToQuotes(klines));
+tradingBot.StartBacktest();
+Console.ReadKey();
+
 // Подписались на событие обновления цены
+await BinaApi.StartListenForNewTrade();
 BinaApi.OnKlineUpdate += OnKlineUpdate;
 
 // Цикл жизни бота
@@ -28,38 +35,38 @@ while (true)
 
 void OnKlineUpdate(Kline k)
 {
-    Kline lk = klines.Last();
-    if (lk.OpenTime == k.OpenTime)
-    {
-        klines.Remove(lk);
-        klines.Add(k);
-    }
-    else
-    {
-        klines.Add(k);
-    }
+    tradingBot.UpdateQuote(Converter.KlineToQuote(k));
+
+    Console.WriteLine($"{DateTime.Now,8:hh:mm:ss} - " +
+        $"Last trade: {Symbol} {k.OpenTime,5:hh:mm} {k.ClosePrice} - " +
+        tradingBot.Report());
+
     JustDoIt();
 }
 
 // Основная функция бота
 void JustDoIt()
 {
-    if (TradingBot.HasSignalToOpenLong(klines))
+    if (tradingBot.SignalToOpenLong)
     {
         // Открываем длинную позицию
-        BinaApi.SpotOrderBuy(10);
+        //BinaApi.SpotOrderBuy(10);
+        Console.WriteLine("Open Long");
     }
-    if (TradingBot.HasSignalToCloseLong(klines))
+    if (tradingBot.SignalToCloseLong)
     {
         // Закрываем длинную позицию
-        BinaApi.SpotOrderSell(10);
+        //BinaApi.SpotOrderSell(10);
+        Console.WriteLine("Close Long");
     }
-    if (TradingBot.HasSignalToOpenShort(klines))
+    if (tradingBot.SignalToOpenShort)
     {
-        BinaApi.SpotOrderSell(10);
+        //BinaApi.SpotOrderSell(10);
+        Console.WriteLine("Open Short");
     }
-    if (TradingBot.HasSignalToCloseShort(klines))
+    if (tradingBot.SignalToCloseShort)
     {
-        BinaApi.SpotOrderBuy(10);
+        //BinaApi.SpotOrderBuy(10);
+        Console.WriteLine("Close Short");
     }
 }

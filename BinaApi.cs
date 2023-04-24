@@ -72,7 +72,6 @@ public static class BinaApi
         if (r.Success)
         {
             klines = r.Data.ToList();
-            await SubsToSock();
 
             Console.WriteLine($"GetKlines({_symbol}) - {klines.Count} klines loaded");
         }
@@ -82,7 +81,7 @@ public static class BinaApi
         }
         return klines;
     }
-    static async Task<CallResult<UpdateSubscription>> SubsToSock()
+    public static async Task<CallResult<UpdateSubscription>> StartListenForNewTrade()
     {
         var r = await socketClient.SpotStreams.
             SubscribeToKlineUpdatesAsync(_symbol!, (KlineInterval)IntervalInSeconds(_interval!),
@@ -99,7 +98,6 @@ public static class BinaApi
                 kline.OpenTime = k.OpenTime;
 
                 KlineUpdated(kline);
-                Console.WriteLine($"{DateTime.Now.ToString("t")} - Last trade: {_symbol} {k.OpenTime} {k.ClosePrice}");
             });
 
         return r;
