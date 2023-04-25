@@ -67,7 +67,7 @@ public static class BinaApi
 
         var r = await _restClient.SpotApi.CommonSpotClient
             .GetKlinesAsync(_symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
-            null, null, 1000, cancellationToken);
+            null, null, 1500, cancellationToken);
 
         if (r.Success)
         {

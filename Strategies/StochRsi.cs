@@ -92,7 +92,7 @@ public class StochRsi
             if (cross != string.Empty)
             {
                 Console.WriteLine(
-                $"{q.Date,10:yyyy-MM-dd} " +
+                $"{q.Date,5:hh:mm} " +
                 $"{q.Close,10:c2}" +
                 $"{e.StochRsi,7:N1}" +
                 $"{e.Signal,7:N1}" +

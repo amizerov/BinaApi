@@ -39,7 +39,10 @@ BinaApi.OnNewKline += OnNewKline;
 
 void OnKlineUpdate(Kline k)
 {
+    strategy.UpdateQuote(Converter.KlineToQuote(k));
     trdGain = trdQty * (k.ClosePrice - trdPrice);
+
+    JustDoIt(k);
 
     Console.WriteLine($"{DateTime.Now,8:hh:mm:ss} - " +
         $"Last trade: {Symbol} {k.OpenTime,5:hh:mm} {k.ClosePrice} " +
@@ -47,8 +50,11 @@ void OnKlineUpdate(Kline k)
 }
 void OnNewKline(Kline k)
 {
-    strategy.UpdateQuote(Converter.KlineToQuote(k));
+    Console.WriteLine($"-{k.OpenTime,5:hh:mm}------------------------------");
+}
 
+void JustDoIt(Kline k)
+{
     switch (strategy.Signal)
     {
         case "LONG":
@@ -62,7 +68,7 @@ void OnNewKline(Kline k)
                 //BinaApi.SpotOrderBuy(10);
                 Console.WriteLine("Open Long");
             }
-            else if(trdQty == -1)
+            else if (trdQty == -1)
             {
                 // BTC - Buy To Close Short position
                 rlzGain += trdQty * (k.OpenPrice - trdPrice);
@@ -99,5 +105,5 @@ void OnNewKline(Kline k)
 }
 
 // Цикл жизни бота
-while (true)
-    await Task.Delay(100);
+Console.ReadKey();
+
