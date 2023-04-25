@@ -12,7 +12,7 @@ List<Kline> klines = new();
 bool res = await BinaApi.CheckApiKey(ApiKey, ApiSec);
 if (res)
 {
-    // Получаем 1000 последних свечей
+    // Получаем 1500 последних свечей
     klines = await BinaApi.GetKlinesAsync(Symbol, Interval);
 }
 else

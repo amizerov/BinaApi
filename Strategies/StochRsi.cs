@@ -3,7 +3,8 @@
 public class StochRsi
 {
     List<Quote> _quotes = new();
-    List<StochRsiResult> _indicas = new();
+    List<StochRsiResult> _stRsi = new();
+    List<SmaResult> _sma = new();
 
     string cross = string.Empty;
 
@@ -23,11 +24,14 @@ public class StochRsi
         {
             _quotes.Add(lastQuote);
         }
-        _indicas = _quotes.GetStochRsi(14, 14, 3, 1).ToList();
-        int c = _indicas.Count;
-        StochRsiResult e = _indicas[c - 1]; // current period
-        StochRsiResult l = _indicas[c - 2]; // last (prior) period
-        GetSignal(lastQuote, e, l);
+        _stRsi = _quotes.GetStochRsi(14, 14, 3, 1).ToList();
+        _sma = _quotes.GetSma(50).ToList();
+        int c = _stRsi.Count - 1;
+        StochRsiResult e = _stRsi[c]; // current period
+        StochRsiResult l = _stRsi[c - 1]; // last (prior) period
+        SmaResult sma = _sma[c];
+
+        GetSignal(lastQuote, e, l, sma);
     }
     public string Signal
     {
@@ -44,7 +48,8 @@ public class StochRsi
          */
 
         // calculate Stochastic RSI
-        _indicas = _quotes.GetStochRsi(14, 14, 3, 1).ToList();
+        _stRsi = _quotes.GetStochRsi(14, 14, 3, 1).ToList();
+        _sma = _quotes.GetSma(50).ToList();
 
         // initialize
         decimal trdPrice = 0;
@@ -58,13 +63,14 @@ public class StochRsi
         for (int i = 1; i < _quotes.Count; i++)
         {
             Quote q = _quotes[i];
-            StochRsiResult e = _indicas[i];   // evaluation period
-            StochRsiResult l = _indicas[i - 1]; // last (prior) period
+            StochRsiResult e = _stRsi[i];   // evaluation period
+            StochRsiResult l = _stRsi[i - 1]; // last (prior) period
+            SmaResult sma = _sma[i];
 
             // unrealized gain on open trade
             decimal trdGain = trdQty * (q.Close - trdPrice);
 
-            GetSignal(q, e, l);
+            GetSignal(q, e, l, sma);
 
             switch (cross)
             {
@@ -101,7 +107,7 @@ public class StochRsi
             }
         }
     }
-    void GetSignal(Quote q, StochRsiResult e, StochRsiResult l)
+    void GetSignal(Quote q, StochRsiResult e, StochRsiResult l, SmaResult sma)
     {
         cross = string.Empty;
 
@@ -109,14 +115,16 @@ public class StochRsi
         // condition: Stoch RSI was <= 20 and Stoch RSI crosses over Signal
         if (l.StochRsi <= 20 && l.StochRsi < l.Signal && e.StochRsi >= e.Signal)
         {
-            cross = "LONG";
+            if(sma.Sma > (double)q.High)
+                cross = "LONG";
         }
 
         // check for SHORT event
         // condition: Stoch RSI was >= 80 and Stoch RSI crosses under Signal
         if (l.StochRsi >= 80 && l.StochRsi > l.Signal && e.StochRsi <= e.Signal)
         {
-            cross = "SHORT";
+            if(sma.Sma < (double)q.Low)
+                cross = "SHORT";
         }
     }
 }
