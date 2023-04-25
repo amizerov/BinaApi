@@ -63,8 +63,8 @@ void JustDoIt(Kline k)
             {
                 // BTO - Buy To Open Long position
                 trdQty = 1;
-                trdPrice = k.OpenPrice;
-                trdTime = k.OpenTime;
+                trdPrice = k.ClosePrice;
+                trdTime = DateTime.Now;
                 // Открываем длинную позицию
                 //BinaApi.SpotOrderBuy(10);
                 Console.WriteLine("Open Long");
@@ -85,9 +85,9 @@ void JustDoIt(Kline k)
             {
                 // STO - Sell To Open Short position
                 trdQty = -1;
-                trdPrice = k.OpenPrice;
-                trdTime = k.OpenTime;
-                // Открываем длинную позицию
+                trdPrice = k.ClosePrice;
+                trdTime = DateTime.Now;
+                // Открываем короткую позицию
                 //BinaApi.SpotOrderSell(10);
                 Console.WriteLine("Open Short");
             }
@@ -97,8 +97,8 @@ void JustDoIt(Kline k)
                 rlzGain += trdQty * (k.OpenPrice - trdPrice);
                 trdQty = 0;
                 trdPrice = 0;
-                // Закрываем короткую позицию
-                //BinaApi.SpotOrderBuy(10);
+                // Закрываем длинную позицию
+                //BinaApi.SpotOrderSell(10);
                 Console.WriteLine("Close Long");
             }
             break;
