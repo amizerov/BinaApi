@@ -12,14 +12,15 @@ public static class BinaApi
 {
     static string? _symbol;
     static string? _interval;
+    static List<Kline> _klines = new();
 
     static BinanceClient _restClient = new();
     static BinanceSocketClient socketClient = new();
 
     public static event Action<Kline>? OnKlineUpdate;
-    static void KlineUpdated(Kline k) => OnKlineUpdate?.Invoke(k);
+    public static event Action<Kline>? OnNewKline;
 
-    public static async Task<bool> Init(string apiKey, string apiSecret)
+    public static async Task<bool> CheckApiKey(string apiKey, string apiSecret)
     {
         bool res = false;
         try
@@ -62,7 +63,6 @@ public static class BinaApi
         _symbol = symbol;
         _interval = interval;
 
-        List<Kline> klines = new();
         CancellationToken cancellationToken = new CancellationToken();
 
         var r = await _restClient.SpotApi.CommonSpotClient
@@ -71,15 +71,15 @@ public static class BinaApi
 
         if (r.Success)
         {
-            klines = r.Data.ToList();
+            _klines = r.Data.ToList();
 
-            Console.WriteLine($"GetKlines({_symbol}) - {klines.Count} klines loaded");
+            Console.WriteLine($"GetKlines({_symbol}) - {_klines.Count} klines loaded");
         }
         else
         {
             Console.WriteLine($"GetKlines({_symbol}) - Error: " + r.Error?.Message);
         }
-        return klines;
+        return _klines;
     }
     public static async Task<CallResult<UpdateSubscription>> StartListenForNewTrade()
     {
@@ -97,7 +97,12 @@ public static class BinaApi
                 kline.Volume = k.Volume;
                 kline.OpenTime = k.OpenTime;
 
-                KlineUpdated(kline);
+                OnKlineUpdate?.Invoke(kline);
+                if(_klines.Last().OpenTime < kline.OpenTime)
+                {
+                    _klines.Add(kline);
+                    OnNewKline?.Invoke(kline);
+                }
             });
 
         return r;

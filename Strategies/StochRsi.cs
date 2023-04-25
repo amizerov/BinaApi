@@ -6,10 +6,6 @@ public class StochRsi
     List<StochRsiResult> _indicas = new();
 
     string cross = string.Empty;
-    decimal trdPrice = 0;
-    decimal trdQty = 0;
-    decimal rlzGain = 0;
-    decimal trdGain = 0;
 
     public StochRsi(List<Quote> quotesHistory)
     {
@@ -33,35 +29,14 @@ public class StochRsi
         StochRsiResult l = _indicas[c - 2]; // last (prior) period
         GetSignal(lastQuote, e, l);
     }
-    public bool SignalToOpenLong
+    public string Signal
     {
         get
         {
-            return trdQty == 0 && cross == "LONG";
+            return cross;
         }
     }
-    public bool SignalToCloseLong
-    {
-        get
-        {
-            return trdQty == 1 && cross == "SHORT";
-        }
-    }
-    public bool SignalToOpenShort
-    {
-        get
-        {
-            return trdQty == 0 && cross == "SHORT";
-        }
-    }
-    public bool SignalToCloseShort
-    {
-        get
-        {
-            return trdQty == -1 && cross == "LONG";
-        }
-    }
-    public void StartBacktest()
+    public void Backtest()
     {
         /* As a result, there will always be one open LONG or SHORT
          * position that is opened and closed at signal crossover
@@ -72,9 +47,9 @@ public class StochRsi
         _indicas = _quotes.GetStochRsi(14, 14, 3, 1).ToList();
 
         // initialize
-        trdPrice = 0;
-        trdQty = 0;
-        rlzGain = 0;
+        decimal trdPrice = 0;
+        decimal trdQty = 0;
+        decimal rlzGain = 0;
 
         Console.WriteLine("   Date   Close  StRSI Signal  Cross  Net Gains");
         Console.WriteLine("-------------------------------------------------------");
@@ -85,64 +60,63 @@ public class StochRsi
             Quote q = _quotes[i];
             StochRsiResult e = _indicas[i];   // evaluation period
             StochRsiResult l = _indicas[i - 1]; // last (prior) period
-            GetSignal(q, e, l);
-        }
 
-        cross = string.Empty;
-        trdPrice = 0;
-        trdQty = 0;
-        rlzGain = 0;
-        trdGain = 0;
+            // unrealized gain on open trade
+            decimal trdGain = trdQty * (q.Close - trdPrice);
+
+            GetSignal(q, e, l);
+
+            switch (cross)
+            {
+                case "LONG":
+                    if(trdQty != 1)
+                    {
+                        // emulates BTC + BTO
+                        rlzGain += trdGain;
+                        trdQty = 1;
+                        trdPrice = q.Close;
+                    }
+                    else cross = string.Empty;
+                    break;
+                case "SHORT":
+                    if (trdQty != -1)
+                    {
+                        // emulates STC + STO
+                        rlzGain += trdGain;
+                        trdQty = -1;
+                        trdPrice = q.Close;
+                    }
+                    else cross = string.Empty;
+                    break;
+            }
+            if (cross != string.Empty)
+            {
+                Console.WriteLine(
+                $"{q.Date,10:yyyy-MM-dd} " +
+                $"{q.Close,10:c2}" +
+                $"{e.StochRsi,7:N1}" +
+                $"{e.Signal,7:N1}" +
+                $"{cross,7}" +
+                $"{rlzGain + trdGain,13:c2}");
+            }
+        }
     }
     void GetSignal(Quote q, StochRsiResult e, StochRsiResult l)
     {
         cross = string.Empty;
 
-        // unrealized gain on open trade
-        trdGain = trdQty * (q.Close - trdPrice);
-
         // check for LONG event
         // condition: Stoch RSI was <= 20 and Stoch RSI crosses over Signal
-        if (l.StochRsi <= 20
-         && l.StochRsi < l.Signal
-         && e.StochRsi >= e.Signal
-         && trdQty != 1)
+        if (l.StochRsi <= 20 && l.StochRsi < l.Signal && e.StochRsi >= e.Signal)
         {
-            // emulates BTC + BTO
-            rlzGain += trdGain;
-            trdQty = 1;
-            trdPrice = q.Close;
             cross = "LONG";
         }
 
         // check for SHORT event
         // condition: Stoch RSI was >= 80 and Stoch RSI crosses under Signal
-        if (l.StochRsi >= 80
-         && l.StochRsi > l.Signal
-         && e.StochRsi <= e.Signal
-         && trdQty != -1)
+        if (l.StochRsi >= 80 && l.StochRsi > l.Signal && e.StochRsi <= e.Signal)
         {
-            // emulates STC + STO
-            rlzGain += trdGain;
-            trdQty = -1;
-            trdPrice = q.Close;
             cross = "SHORT";
         }
-
-        if (cross != string.Empty)
-        {
-            Console.WriteLine(
-            $"{q.Date,8:hh:mm:ss} " +
-            $"{q.Close,10:c2}" +
-            $"{e.StochRsi,7:N1}" +
-            $"{e.Signal,7:N1}" +
-            $"{cross,7}" +
-            $"{trdGain,13:c2}" +
-            $"{rlzGain + trdGain,13:c2}");
-        }
-    }
-    public string Report()
-    {
-        return $"Position: {trdQty,7}, Price: {trdPrice}, Profit: {trdGain,12:c2}/{rlzGain,12:c2}";
     }
 }
