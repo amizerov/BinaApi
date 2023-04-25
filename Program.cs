@@ -51,7 +51,7 @@ void OnKlineUpdate(Kline k)
 }
 void OnNewKline(Kline k)
 {
-    Console.WriteLine($"-{k.OpenTime,5:hh:mm}------------------------------");
+    Console.WriteLine($"-> {k.OpenTime,5:hh:mm} - New {Interval} ----------------------------");
 }
 
 void JustDoIt(Kline k)
