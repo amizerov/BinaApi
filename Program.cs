@@ -2,6 +2,7 @@
 using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
+string Interval = "3m";
 string ApiKey = Secrets.ApiKey;
 string ApiSec = Secrets.ApiSecret;
 
@@ -12,7 +13,7 @@ bool res = await BinaApi.CheckApiKey(ApiKey, ApiSec);
 if (res)
 {
     // Получаем 1000 последних свечей
-    klines = await BinaApi.GetKlinesAsync(Symbol, "3m");
+    klines = await BinaApi.GetKlinesAsync(Symbol, Interval);
 }
 else
 {
