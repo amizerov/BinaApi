@@ -2,7 +2,7 @@
 using CryptoExchange.Net.CommonObjects;
 
 string Symbol = "BTCUSDT";
-string Interval = "3m";
+string Interval = "1h";
 string ApiKey = Secrets.ApiKey;
 string ApiSec = Secrets.ApiSecret;
 
@@ -12,8 +12,9 @@ List<Kline> klines = new();
 bool res = await BinaApi.CheckApiKey(ApiKey, ApiSec);
 if (res)
 {
-    // Получаем 1500 последних свечей
+    // Получаем 2000 последних свечей
     klines = await BinaApi.GetKlinesAsync(Symbol, Interval);
+    Console.WriteLine($"{klines.First().OpenTime} - {klines.Last().OpenTime}");
 }
 else
 {
@@ -40,7 +41,7 @@ BinaApi.OnNewKline += OnNewKline;
 
 void OnKlineUpdate(Kline k)
 {
-    strategy.UpdateQuote(Converter.KlineToQuote(k));
+    strategy.UpdateQuotes(Converter.KlineToQuote(k));
     trdGain = trdQty * (k.ClosePrice - trdPrice);
 
     JustDoIt(k);

@@ -4,6 +4,7 @@ using Binance.Net.Interfaces;
 using Binance.Net.Objects;
 using Binance.Net.Objects.Models.Spot;
 using CryptoExchange.Net.CommonObjects;
+using CryptoExchange.Net.Interfaces.CommonClients;
 using CryptoExchange.Net.Logging;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
@@ -62,23 +63,33 @@ public static class BinaApi
     {
         _symbol = symbol;
         _interval = interval;
+        TimeSpan t = TimeSpan.FromSeconds(IntervalInSeconds(_interval));
+        ISpotClient c = _restClient.SpotApi.CommonSpotClient;
 
-        CancellationToken cancellationToken = new CancellationToken();
-
-        var r = await _restClient.SpotApi.CommonSpotClient
-            .GetKlinesAsync(_symbol, TimeSpan.FromSeconds(IntervalInSeconds(_interval)),
-            null, null, 1500, cancellationToken);
-
-        if (r.Success)
+        DateTime? d = null;
+        List<List<Kline>> pages = new();
+        for (int i = 0; i < 10; i++)
         {
-            _klines = r.Data.ToList();
-
-            Console.WriteLine($"GetKlines({_symbol}) - {_klines.Count} klines loaded");
+            var r = await c.GetKlinesAsync(_symbol, t, null, d - t, 1000);
+            if (r.Success)
+            {
+                List<Kline> page = r.Data.ToList();
+                pages.Add(page);
+                d = page.First().OpenTime;
+            }
+            else
+            {
+                Console.WriteLine($"GetKlines({_symbol}) - Error: " + r.Error?.Message);
+            }
         }
-        else
+        pages.Reverse();
+        foreach(var page in pages) 
         {
-            Console.WriteLine($"GetKlines({_symbol}) - Error: " + r.Error?.Message);
+            _klines.AddRange(page);
         }
+        
+        Console.WriteLine($"GetKlines({_symbol}) - {_klines.Count} klines loaded");
+
         return _klines;
     }
     public static async Task<CallResult<UpdateSubscription>> StartListenForNewTrade()
